@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:fanplay/home_page/pages/leagues/franchise_select/franchise_select.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fanplay/auth/auth_page.dart';
@@ -26,6 +27,10 @@ void main() {
       routes: {
         LoadingScreen.id: (context) => LoadingScreen(),
         HomeScreen.id: (context) => HomeScreen(),
+        FranchiseSelect.id: (context) => FranchiseSelect(
+              leagueId: (ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>)['leagueId'],
+            ),
         //extract the arguments from the pushNamed call with LeaguePage.id
         LeaguePage.id: (context) => LeaguePage(
               leagueId: (ModalRoute.of(context)!.settings.arguments
@@ -51,7 +56,7 @@ class _MyApp extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     checkToken() async {
-      if (await TokenRequests.tryRefreshToken()) {
+      if (await HttpRequests.tryRefreshToken(context)) {
         Navigator.pushReplacementNamed(context, HomeScreen.id);
       }
     }

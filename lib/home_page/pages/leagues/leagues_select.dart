@@ -31,7 +31,7 @@ class _LeagueSelectState extends State<LeagueSelect> {
     Color transparentPrimary =
         Theme.of(context).colorScheme.primary.withAlpha(255);
     return Container(
-      height: 150,
+      height: 160,
       alignment: Alignment.centerLeft,
       child: ListView(
         scrollDirection: Axis.horizontal,

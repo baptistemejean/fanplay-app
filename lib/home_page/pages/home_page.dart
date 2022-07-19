@@ -1,3 +1,4 @@
+import 'package:fanplay/home_page/pages/leagues/league_create_form.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/http_requests.dart';
@@ -120,6 +121,15 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 26),
+            ),
+          ),
+          Container(
+            alignment: Alignment.centerLeft,
+            margin: EdgeInsets.only(bottom: 5, left: 20),
+            child: Text(
+              'Your leagues',
+              textAlign: TextAlign.left,
+              style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ),
           !isLeaguesLoading && _leagues.isNotEmpty

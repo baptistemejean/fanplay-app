@@ -56,6 +56,12 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  showCreateDialog() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) => LeagueCreateForm());
+  }
+
   List<Widget> screens(User user) {
     return [
       HomePage(
@@ -77,10 +83,14 @@ class _HomeScreenState extends State<HomeScreen> {
               Icon(
                 Ionicons.flash,
                 color: Colors.white,
+                size: 20,
               ),
               Text(
-                "0",
-                style: TextStyle(color: Colors.white),
+                "9999",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600),
               )
             ]),
           )
@@ -103,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         elevation: 4,
         onPressed: (() {
-          Navigator.of(context).pushNamed(LeagueCreateForm.id);
+          showCreateDialog();
         }),
         child: Icon(Ionicons.add, size: 40),
         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,

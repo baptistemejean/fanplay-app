@@ -1,7 +1,10 @@
 import 'dart:ffi';
+import 'dart:js';
 
 import 'package:fanplay/components/nba_player.dart';
 import 'package:fanplay/components/user.dart';
+import 'package:fanplay/main.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fanplay/components/franchise.dart';
 import 'dart:convert';
@@ -13,16 +16,22 @@ import 'tokens.dart';
 
 class HttpRequests {
   static const String PORT = '5000';
-}
 
-class TokenRequests extends HttpRequests {
-  static Future<bool> tryRefreshToken() async {
-    final result = await refreshToken() as Map<String, dynamic>;
+  static Future<bool> tryRefreshToken(BuildContext context) async {
+    final result = await TokenRequests.refreshToken();
     final exception = result['exception'] as HttpException;
+
+    if (exception.statusCode == 401) {
+      print('LOGGED OUT');
+
+      await AuthRequests.logout(context);
+    }
 
     return exception.success;
   }
+}
 
+class TokenRequests extends HttpRequests {
   static Future<Map<String, dynamic>> refreshToken() async {
     final refreshToken = await Tokens.getToken('refresh_token');
 
@@ -104,7 +113,7 @@ class AuthRequests extends HttpRequests {
     return {'exception': exception, 'body': null};
   }
 
-  static Future<Map<String, dynamic>> logout() async {
+  static Future<Map<String, dynamic>> logout(BuildContext context) async {
     final accessToken = await Tokens.getToken('access_token');
 
     final http.Response response = await http.post(
@@ -119,6 +128,8 @@ class AuthRequests extends HttpRequests {
 
     if (exception.success) {
       await Tokens.removeTokens();
+
+      Navigator.of(context).pushNamedAndRemoveUntil(MyApp.id, (route) => false);
     }
 
     return {'exception': exception, 'body': null};
@@ -147,7 +158,7 @@ class AuthRequests extends HttpRequests {
   }
 }
 
-class LeagueRequests {
+class LeagueRequests extends HttpRequests {
   static Future<Map<String, dynamic>> getLeagues() async {
     final accessToken = await Tokens.getToken('access_token');
 
@@ -170,7 +181,8 @@ class LeagueRequests {
     return {'exception': exception, 'body': leagues};
   }
 
-  static Future<Map<String, dynamic>> getLeague(String id) async {
+  static Future<Map<String, dynamic>> getLeague(
+      BuildContext context, String id) async {
     final accessToken = await Tokens.getToken('access_token');
 
     final http.Response response = await http.get(
@@ -187,12 +199,16 @@ class LeagueRequests {
 
     if (exception.success) {
       league = League.fromJson(jsonDecode(response.body));
+    } else if (exception.statusCode == 401) {
+      if (await HttpRequests.tryRefreshToken(context)) {
+        getLeague(context, id);
+      }
     }
 
     return {'exception': exception, 'body': league};
   }
 
-  static Future<Map<String, dynamic>> createLeague(
+  static Future<Map<String, dynamic>> createLeague(BuildContext context,
       String name, bool isPrivate, bool isSingleTeam) async {
     final accessToken = await Tokens.getToken('access_token');
     final http.Response response = await http.post(
@@ -207,9 +223,21 @@ class LeagueRequests {
           'isSingleTeam': isSingleTeam
         }));
 
+    var league;
+
     final exception = HttpException.fromResponse(response);
 
-    return {'exception': exception, 'body': null};
+    if (exception.success) {
+      league = jsonDecode(response.body);
+    } else if (exception.statusCode == 401) {
+      if (await HttpRequests.tryRefreshToken(context)) {
+        print('REFRESHED');
+
+        return await createLeague(context, name, isPrivate, isSingleTeam);
+      }
+    }
+
+    return {'exception': exception, 'body': league};
   }
 
   static Future<Map<String, dynamic>> joinLeague(String condensedId) async {

@@ -22,8 +22,6 @@ class Team {
       required this.franchise});
 
   factory Team.fromJson(Map<String, dynamic> json) {
-    print(json);
-
     return Team(
       roster: json['roster'],
       wins: json['wins'],

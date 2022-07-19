@@ -21,9 +21,7 @@ class _MyFanplayPageState extends State<MyFanplayPage> {
       children: [
         TextButton(
             onPressed: () async {
-              final result = await AuthRequests.logout();
-
-              Navigator.pushReplacementNamed(context, MyApp.id);
+              await AuthRequests.logout(context);
             },
             child: const Text(
               'Log out',

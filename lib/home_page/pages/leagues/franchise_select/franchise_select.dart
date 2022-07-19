@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:fanplay/loading_page/loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fanplay/home_page/pages/leagues/league_page.dart';
 import 'package:fanplay/home_page/pages/leagues/player_auction/player_auction.dart';
@@ -13,11 +14,11 @@ import 'package:http/http.dart' as http;
 import 'franchise_container.dart';
 
 class FranchiseSelect extends StatefulWidget {
-  String leagueId;
-  bool isPrivate;
+  static const String id = 'FranchiseSelect';
 
-  FranchiseSelect({Key? key, required this.leagueId, required this.isPrivate})
-      : super(key: key);
+  String leagueId;
+
+  FranchiseSelect({Key? key, required this.leagueId}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
@@ -123,11 +124,12 @@ class _FranchiseSelectState extends State<FranchiseSelect> {
                 child: FloatingActionButton(
                   heroTag: 'floating-btn-2',
                   onPressed: () async {
+                    Navigator.of(context)
+                        .pushReplacementNamed(LoadingScreen.id);
+
                     final result = await TeamRequests.createTeam(
                         _franchises[_wheelController.selectedItem].id,
                         widget.leagueId);
-
-                    print(result['exception'].errorMessage);
 
                     if (result['exception'].success) {
                       Navigator.pushReplacementNamed(context, LeaguePage.id,

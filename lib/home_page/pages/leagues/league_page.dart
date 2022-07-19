@@ -39,7 +39,7 @@ class _LeaguePageState extends State<LeaguePage> {
   }
 
   void loadLeague() async {
-    final result = await LeagueRequests.getLeague(widget.leagueId);
+    final result = await LeagueRequests.getLeague(context, widget.leagueId);
 
     if (result['exception'].success) {
       _league = result['body'];
@@ -62,8 +62,7 @@ class _LeaguePageState extends State<LeaguePage> {
         Theme.of(context).colorScheme.primary.withAlpha(255);
     return !isLeagueLoading
         ? _league.teams.isEmpty
-            ? FranchiseSelect(
-                leagueId: _league.id, isPrivate: _league.isPrivate)
+            ? FranchiseSelect(leagueId: _league.id)
             : DefaultTabController(
                 initialIndex: 1,
                 length: 4,

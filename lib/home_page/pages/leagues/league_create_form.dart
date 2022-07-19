@@ -1,8 +1,12 @@
 import 'dart:convert';
 
+import 'package:fanplay/home_page/pages/leagues/franchise_select/franchise_select.dart';
+import 'package:fanplay/home_page/pages/leagues/league_page.dart';
+import 'package:fanplay/loading_page/loading_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fanplay/home_page/home.dart';
 import 'package:fanplay/components/franchise.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fanplay/components/league_preview.dart';
 import 'package:fanplay/components/http_requests.dart';
@@ -22,193 +26,211 @@ enum Security { public, private }
 class _LeagueCreateFormState extends State<LeagueCreateForm> {
   final _formKey = GlobalKey<FormState>();
 
-  var leagueName;
+  var _leagueName = '';
 
   String dropdownValue = 'Public';
-  bool isPrivate = false;
+  bool _isPrivate = false;
 
   Security? _security = Security.public;
-  bool _isSingleTeam = true;
+  bool _isSingleTeam = false;
+
+  int _currentForm = 0;
+
+  List<Form> forms(BuildContext context, GlobalKey<FormState> formKey) => [
+        Form(
+            key: formKey,
+            child: Container(
+              alignment: Alignment.centerLeft,
+              width: 300,
+              height: 70,
+              child: TextFormField(
+                initialValue: _leagueName,
+                decoration: const InputDecoration(
+                    label: Text("Name"),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8))),
+                    contentPadding: EdgeInsets.all(8)),
+                style: const TextStyle(
+                  fontSize: 14,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a name';
+                  }
+
+                  return null;
+                },
+                onChanged: (value) {
+                  _leagueName = value;
+                },
+              ),
+            )),
+        Form(
+            key: formKey,
+            child: Container(
+              alignment: Alignment.centerLeft,
+              width: 300,
+              height: 130,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Container(
+                    child: ListTile(
+                        subtitle: Text(
+                          "Everyone can join",
+                          style: TextStyle(color: Color(0xff777777)),
+                        ),
+                        minVerticalPadding: 0,
+                        dense: true,
+                        horizontalTitleGap: 1,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text(
+                          "Public",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        leading: Radio<Security>(
+                          fillColor: MaterialStateProperty.all(
+                              Theme.of(context).colorScheme.primary),
+                          value: Security.public,
+                          groupValue: _security,
+                          onChanged: (Security? value) {
+                            setState(() {
+                              _security = value;
+
+                              if (value == Security.public) {
+                                _isPrivate = false;
+                              }
+                            });
+                          },
+                        )),
+                  ),
+                  Container(
+                    child: ListTile(
+                        subtitle: Text("For you and your friends",
+                            style: TextStyle(
+                              color: Color(0xff777777),
+                            )),
+                        horizontalTitleGap: 1,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text("Private",
+                            style: TextStyle(fontSize: 14)),
+                        leading: Radio<Security>(
+                          fillColor: MaterialStateProperty.all(
+                              Theme.of(context).colorScheme.primary),
+                          value: Security.private,
+                          groupValue: _security,
+                          onChanged: (Security? value) {
+                            setState(() {
+                              _security = value;
+
+                              if (value == Security.private) {
+                                _isPrivate = true;
+                              }
+                            });
+                          },
+                        )),
+                  )
+                ],
+              ),
+            )),
+        Form(
+          key: formKey,
+          child: Container(
+            width: 300,
+            height: 130,
+            child: ListTile(
+              subtitle:
+                  Text("Allows players to only own and manage a single team",
+                      style: TextStyle(
+                        color: Color(0xff777777),
+                      )),
+              horizontalTitleGap: 1,
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: const Text("Single Team", style: TextStyle(fontSize: 14)),
+              leading: Checkbox(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(3)),
+                value: _isSingleTeam,
+                fillColor: MaterialStateProperty.all(
+                    Theme.of(context).colorScheme.primary),
+                onChanged: (value) {
+                  setState(() {
+                    _isSingleTeam = value!;
+                  });
+                },
+              ),
+            ),
+          ),
+        )
+      ];
+
+  List<Text> titles = [
+    Text("Name your league"),
+    Text("Security"),
+    Text("Preferences")
+  ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          splashRadius: 17,
-          icon: const Icon(
-            Icons.arrow_back_ios_rounded,
-            size: 21,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text("Create League"),
-        centerTitle: true,
-      ),
-      body: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              Container(
-                padding: EdgeInsets.only(top: 20, right: 30, left: 30),
-                child: TextFormField(
-                  decoration: const InputDecoration(
-                      label: Text("Name"),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8))),
-                      contentPadding: EdgeInsets.all(8)),
-                  style: const TextStyle(
-                    fontSize: 14,
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      title: _currentForm >= 0
+          ? Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+              IconButton(
+                  splashRadius: 17,
+                  icon: const Icon(
+                    Ionicons.arrow_back,
+                    size: 22,
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a name';
-                    }
+                  onPressed: () {
+                    _currentForm > 0
+                        ? setState(() {
+                            _currentForm -= 1;
+                          })
+                        : Navigator.of(context).pop();
+                  }),
+              titles[_currentForm]
+            ])
+          : titles[_currentForm],
+      content: forms(context, _formKey)[_currentForm],
+      actions: [
+        TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+            },
+            child: Text('Cancel')),
+        TextButton(
+            onPressed: () async {
+              if (_formKey.currentState!.validate()) {
+                if (_currentForm >= 2) {
+                  Navigator.of(context).pop();
 
-                    return null;
-                  },
-                  onChanged: (value) {
-                    leagueName = value;
-                  },
-                ),
-              ),
-              Container(
-                  margin: EdgeInsets.only(top: 20, right: 20, left: 20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Container(
-                        child: ListTile(
-                            subtitle: Text(
-                              "Everyone can join",
-                              style: TextStyle(color: Color(0xff777777)),
-                            ),
-                            minVerticalPadding: 0,
-                            dense: true,
-                            horizontalTitleGap: 1,
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text(
-                              "Public",
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            leading: Radio<Security>(
-                              fillColor: MaterialStateProperty.all(
-                                  Theme.of(context).colorScheme.secondary),
-                              value: Security.public,
-                              groupValue: _security,
-                              onChanged: (Security? value) {
-                                setState(() {
-                                  _security = value;
+                  Navigator.of(context).pushNamed(LoadingScreen.id);
 
-                                  if (value == Security.public) {
-                                    isPrivate = false;
-                                  }
-                                });
-                              },
-                            )),
-                      ),
-                      Container(
-                        child: ListTile(
-                            subtitle: Text("For you and your friends",
-                                style: TextStyle(
-                                  color: Color(0xff777777),
-                                )),
-                            horizontalTitleGap: 1,
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text("Private",
-                                style: TextStyle(fontSize: 14)),
-                            leading: Radio<Security>(
-                              fillColor: MaterialStateProperty.all(
-                                  Theme.of(context).colorScheme.secondary),
-                              value: Security.private,
-                              groupValue: _security,
-                              onChanged: (Security? value) {
-                                setState(() {
-                                  _security = value;
+                  final result = await LeagueRequests.createLeague(
+                      context, _leagueName, _isPrivate, _isSingleTeam);
 
-                                  if (value == Security.private) {
-                                    isPrivate = true;
-                                  }
-                                });
-                              },
-                            )),
-                      )
-                    ],
-                  )),
-              Container(
-                  margin: EdgeInsets.only(top: 10, left: 20, right: 20),
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Checkbox(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(3)),
-                        value: _isSingleTeam,
-                        fillColor: MaterialStateProperty.all(
-                            Theme.of(context).colorScheme.secondary),
-                        onChanged: (value) {
-                          setState(() {
-                            _isSingleTeam = value!;
-                          });
-                        },
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Container(
-                            margin: EdgeInsets.only(bottom: 1),
-                            child: Text(
-                              "Single team",
-                              style:
-                                  TextStyle(fontSize: 14, color: Colors.black),
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.only(top: 1),
-                            child: Text(
-                                "Allows players to only own and manage a single team",
-                                style: TextStyle(
-                                    fontSize: 13, color: Color(0xff777777))),
-                          ),
-                        ],
-                      )
-                    ],
-                  )),
-            ],
-          )),
-      floatingActionButton: Container(
-        height: 40,
-        width: 250,
-        //margin: EdgeInsets.only(top: 50, right: 30, left: 30),
-        child: FloatingActionButton(
-          heroTag: 'floating-btn-2',
-          child: Text(
-            "Create New League",
-            style: TextStyle(letterSpacing: 0),
-          ),
-          elevation: 2,
-          highlightElevation: 4,
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-          onPressed: () async {
-            if (_formKey.currentState!.validate()) {
-              await LeagueRequests.createLeague(
-                  leagueName, isPrivate, _isSingleTeam);
+                  print(result['exception'].statusCode);
 
-              Navigator.pushNamedAndRemoveUntil(
-                  context, HomeScreen.id, (route) => false);
-            }
-          },
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+                  if (result['exception'].success) {
+                    Navigator.of(context).pushReplacementNamed(
+                        FranchiseSelect.id,
+                        arguments: {'leagueId': result['body']['leagueId']});
+                  }
+                } else {
+                  setState(() {
+                    _currentForm += 1;
+                  });
+                }
+              }
+            },
+            child: Text(
+              'Next',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            )),
+      ],
     );
   }
 }

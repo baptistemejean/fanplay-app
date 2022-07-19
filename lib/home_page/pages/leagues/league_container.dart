@@ -43,13 +43,11 @@ class _LeagueContainerState extends State<LeagueContainer> {
   @override
   Widget build(BuildContext context) {
     return Card(
-        color: Theme.of(context).colorScheme.onBackground,
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        margin: EdgeInsets.only(
-          bottom: 20,
-          left: 20,
-        ),
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        elevation: 5,
+        shadowColor: Colors.black.withOpacity(1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        margin: EdgeInsets.only(left: 20, bottom: 10),
         /*decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               color: Theme.of(context).colorScheme.onBackground,
@@ -61,6 +59,7 @@ class _LeagueContainerState extends State<LeagueContainer> {
                     color: Color(0xffD5D5D5))
               ]),*/
         child: InkWell(
+          borderRadius: BorderRadius.circular(15),
           onTap: (() {
             Navigator.pushNamed(context, LeaguePage.id, arguments: {
               'id': widget.league.id,
@@ -68,51 +67,61 @@ class _LeagueContainerState extends State<LeagueContainer> {
           }),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              SizedBox(
+                height: 15,
+              ),
               Container(
-                alignment: Alignment.centerLeft,
-                margin: EdgeInsets.only(left: 20, top: 10),
+                margin: EdgeInsets.only(left: 20),
                 child: Text(
                   widget.league.name,
                   textAlign: TextAlign.start,
                   style: TextStyle(
-                    fontSize: 20,
-                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 ),
               ),
               Container(
-                  margin:
-                      EdgeInsets.only(top: 40, left: 30, right: 10, bottom: 30),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      widget.league.selectedTeam != null && !_isTokenLoading
-                          ? Container(
-                              child: Image(
-                                image: flutter_svg_provider.Svg(
-                                    'http://10.0.2.2:${HttpRequests.PORT}/public/logos/${widget.league.selectedTeam!.franchise.franchiseName}/logo.svg',
-                                    source: flutter_svg_provider.SvgSource.network,
-                                    headers: {
-                                      "Authorization": "Bearer $accessToken"
-                                    }),
-                              ),
-                            )
-                          : SizedBox.shrink(),
-                      Container(
-                        width: 130,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: LinearProgressIndicator(
-                            color: Theme.of(context).colorScheme.secondary,
-                            minHeight: 10,
-                            value: 0.23,
-                            semanticsLabel: "League status",
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  widget.league.selectedTeam != null && !_isTokenLoading
+                      ? Container(
+                          height: 90,
+                          child: Image(
+                            image: flutter_svg_provider.Svg(
+                                'http://10.0.2.2:${HttpRequests.PORT}/public/logos/${widget.league.selectedTeam!.franchise.franchiseName}/logo.svg',
+                                source: flutter_svg_provider.SvgSource.network,
+                                headers: {
+                                  "Authorization": "Bearer $accessToken"
+                                }),
                           ),
-                        ),
+                        )
+                      : SizedBox.shrink(),
+                  Container(
+                    //margin: EdgeInsets.only(right: 20),
+                    width: 160,
+                    height: 15,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: LinearProgressIndicator(
+                        color: widget.league.selectedTeam != null
+                            ? widget.league.selectedTeam!.franchise.colorPrimary
+                            : Theme.of(context).colorScheme.secondary,
+                        minHeight: 10,
+                        value: 0.23,
+                        semanticsLabel: "League status",
                       ),
-                    ],
-                  ))
+                    ),
+                  ),
+                  SizedBox(
+                    width: 20,
+                  )
+                ],
+              ))
             ],
           ),
         ));
