@@ -56,7 +56,7 @@ class _MyApp extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     checkToken() async {
-      if (await HttpRequests.tryRefreshToken(context)) {
+      if (await HttpRequests.tryRefreshToken(context, false)) {
         Navigator.pushReplacementNamed(context, HomeScreen.id);
       }
     }

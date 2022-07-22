@@ -1,6 +1,5 @@
 import 'dart:ffi';
-import 'dart:js';
-
+import 'dart:io';
 import 'package:fanplay/components/nba_player.dart';
 import 'package:fanplay/components/user.dart';
 import 'package:fanplay/main.dart';
@@ -17,14 +16,13 @@ import 'tokens.dart';
 class HttpRequests {
   static const String PORT = '5000';
 
-  static Future<bool> tryRefreshToken(BuildContext context) async {
+  static Future<bool> tryRefreshToken(
+      BuildContext context, bool ensureRedirect) async {
     final result = await TokenRequests.refreshToken();
     final exception = result['exception'] as HttpException;
 
-    if (exception.statusCode == 401) {
-      print('LOGGED OUT');
-
-      await AuthRequests.logout(context);
+    if (exception.statusCode == 401 && ensureRedirect) {
+      Navigator.of(context).pushNamedAndRemoveUntil(MyApp.id, (route) => false);
     }
 
     return exception.success;
@@ -200,7 +198,7 @@ class LeagueRequests extends HttpRequests {
     if (exception.success) {
       league = League.fromJson(jsonDecode(response.body));
     } else if (exception.statusCode == 401) {
-      if (await HttpRequests.tryRefreshToken(context)) {
+      if (await HttpRequests.tryRefreshToken(context, true)) {
         getLeague(context, id);
       }
     }
@@ -230,7 +228,7 @@ class LeagueRequests extends HttpRequests {
     if (exception.success) {
       league = jsonDecode(response.body);
     } else if (exception.statusCode == 401) {
-      if (await HttpRequests.tryRefreshToken(context)) {
+      if (await HttpRequests.tryRefreshToken(context, true)) {
         print('REFRESHED');
 
         return await createLeague(context, name, isPrivate, isSingleTeam);

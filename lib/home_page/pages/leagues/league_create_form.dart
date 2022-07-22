@@ -212,8 +212,6 @@ class _LeagueCreateFormState extends State<LeagueCreateForm> {
                   final result = await LeagueRequests.createLeague(
                       context, _leagueName, _isPrivate, _isSingleTeam);
 
-                  print(result['exception'].statusCode);
-
                   if (result['exception'].success) {
                     Navigator.of(context).pushReplacementNamed(
                         FranchiseSelect.id,
